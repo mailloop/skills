@@ -1,0 +1,3 @@
+# Local-development marketplace — points the plugin at a local Mailloop stack
+# (http://localhost:4002/mcp). Never published.
+local-dev/

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mailloop": {
+      "type": "http",
+      "url": "https://api.mailloop.io/mcp"
+    }
+  }
+}

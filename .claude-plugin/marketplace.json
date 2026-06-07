@@ -1,0 +1,18 @@
+{
+  "name": "mailloop",
+  "owner": {
+    "name": "Mailloop",
+    "url": "https://mailloop.io"
+  },
+  "metadata": {
+    "description": "Mailloop plugins for AI agents: email-testing tools and skills.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "mailloop",
+      "source": "./plugins/mailloop",
+      "description": "Test and inspect transactional email with Mailloop sandboxes. Bundles the Mailloop MCP server connection and a skill that teaches the trigger -> wait_for_email -> assert workflow."
+    }
+  ]
+}

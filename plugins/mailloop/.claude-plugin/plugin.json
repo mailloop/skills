@@ -1,0 +1,11 @@
+{
+  "name": "mailloop",
+  "description": "Email testing for agents: create sandboxes, wait for captured emails, inspect rendered HTML and links, send block-based emails, and debug webhooks via the Mailloop MCP server.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Mailloop",
+    "url": "https://mailloop.io"
+  },
+  "homepage": "https://mailloop.io/mcp",
+  "license": "MIT"
+}
