@@ -18,6 +18,8 @@ email got sent" into a deterministic test assertion.
   `list_sandboxes`, `get_sandbox`, `update_sandbox`, `delete_sandbox`.
 - Emails: `wait_for_email` (the workhorse), `list_emails`, `get_email`.
 - Sending: `send_email` (block-based; needs the `emails:send` scope).
+- Resend to a real inbox: `list_destinations`, `add_destination`,
+  `remove_destination`, `resend_email`, `get_resend_quota`.
 - Webhooks: `create_webhook`, `list_webhooks`, `get_webhook`, `update_webhook`,
   `delete_webhook`, `test_webhook`, `list_webhook_deliveries`.
 
@@ -83,6 +85,23 @@ Blocks: `paragraph{content}`, `heading{content,level}`, `button{text,href}`,
 `code{content,language?}`, `divider`, `spacer`. Requires the `emails:send`
 scope on your API key. Read the VALIDATION_ERROR details to self-correct an
 invalid payload.
+
+## Resend to a real inbox
+
+For when a human needs to see how a captured email actually renders on a real
+device or client (Gmail Android dark mode is the classic case). `resend_email`
+forwards the original HTML untouched to a real address — only the From is
+rewritten (to a Mailloop address, original sender kept in Reply-To) so it lands
+in the inbox instead of spam.
+
+- Destinations are an allowlist. A new address must be confirmed once (a link is
+  emailed) before it can receive resends — `add_destination` returns status
+  `pending` until then, or `verified` if it already belongs to an org member's
+  confirmed account. Tell the user to click the link when status is `pending`.
+- `resend_email` needs a `destination_id` (from `list_destinations`) whose status
+  is `verified`, plus the `email_id`. Needs the `emails:resend` scope.
+- Resends are quota-limited per month (`get_resend_quota` / the `quota` field on
+  `list_destinations`). `RESEND_QUOTA_EXCEEDED` means the limit is reached.
 
 ## Error contract
 
