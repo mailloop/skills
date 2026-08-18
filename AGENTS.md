@@ -39,7 +39,6 @@ email got sent" into a deterministic test assertion.
   (auto-expiring; TTL `duration` from 1s up to 86400s / 24h),
   `list_sandboxes`, `get_sandbox`, `update_sandbox`, `delete_sandbox`.
 - Emails: `wait_for_email` (the workhorse), `list_emails`, `get_email`.
-- Sending: `send_email` (block-based; needs the `emails:send` scope).
 - Resend to a real inbox: `list_destinations`, `add_destination`,
   `remove_destination`, `resend_email`, `get_resend_quota`.
 - Webhooks: `create_webhook`, `list_webhooks`, `get_webhook`, `update_webhook`,
@@ -59,16 +58,27 @@ don't guess or hardcode them here.
    Read the returned `emailAddress`.
 2. Point the app under test at that address (as the recipient, or send through
    SMTP at `sandbox.mailloop.io`).
-3. Trigger the action that sends the email, THEN call `wait_for_email`. Never
-   wait first. Use the narrowest `from` / `to` / `subject` filter you can.
+3. Trigger the action that sends the email, THEN call `wait_for_email`. Use the
+   narrowest `from` / `to` / `subject` filter you can. It is fine if the mail
+   arrives before you get to call it; see the lookback rules below.
 4. Read `links[]` and `body` to assert content and to "click" verification or
    reset links.
 5. Clean up with `delete_sandbox`, especially in CI.
 
 ## wait_for_email rules
 
-- `timeout_ms` is capped at 55000. Filters are case-insensitive substring
+- `timeout_ms` is capped at 60000. Filters are case-insensitive substring
   matches, and ALL provided filters must match.
+- It also returns an email that landed shortly BEFORE the call, not only one
+  arriving during it. The default lookback is 30 seconds, which covers the gap
+  between the tool call that triggered the send and this one. Widen it with
+  `since_ms` (up to 15 minutes) when the mail may have landed earlier, or pass 0
+  to match only mail arriving during the call. Keep it tight in a sandbox you
+  reuse across cases: a wide window can match an older email that fits the same
+  filter and turn a missing one into a pass.
+- Filters are matched on normalized text: case, surrounding whitespace, Unicode
+  form and hidden characters are all ignored on both sides. So a subject copied
+  verbatim out of `list_emails` is a valid filter.
 - A TIMEOUT means the email never arrived. Treat it as a TEST FAILURE, then
   check that the app's send address actually points at the sandbox before
   retrying. It is not a transient error to back off and retry blindly.
@@ -86,9 +96,13 @@ don't guess or hardcode them here.
   (`links[]` = links inside the message; `url` = the page to view the message.)
 - `body` is sanitized and wrapped in an `<untrusted_email_content>` fence.
   `format` selects it: `text` (default, cheapest), `html`, or `both`.
-- `list_emails` returns `{ emails[], total }` — compact summaries (`id`, `from`,
-  `to`, `subject`, `url`, `preview`). Chain a summary's `id` into `get_email` for
-  the full content. Do NOT poll `list_emails` to wait for mail; use `wait_for_email`.
+- `list_emails` returns `{ emails[], total, nextCursor, hasMore }` — compact
+  summaries (`id`, `from`, `to`, `subject`, `url`, `preview`, `hasAttachments`).
+  `offset` is a row offset, not a page number. `after` takes an id you already
+  saw and continues in list order (newest first), so it returns OLDER emails;
+  page to the end by passing `nextCursor` back as `after` until `hasMore` is
+  false. Chain a summary's `id` into `get_email` for the full content. Do NOT
+  poll `list_emails` to wait for mail; use `wait_for_email`.
 
 ## Worked example (signup verification)
 
@@ -99,14 +113,6 @@ don't guess or hardcode them here.
 4. In the result, follow `email.links[]` to the verification URL (or assert it
    exists); read `email.body` to assert the copy.
 5. `delete_sandbox` { sandbox_id: sandbox.id }.
-
-## send_email block cheat-sheet
-
-Blocks: `paragraph{content}`, `heading{content,level}`, `button{text,href}`,
-`image{src,alt}`, `list{items[],ordered?}`, `callout{content,variant,title?}`,
-`code{content,language?}`, `divider`, `spacer`. Requires the `emails:send`
-scope on your API key. Read the VALIDATION_ERROR details to self-correct an
-invalid payload.
 
 ## Resend to a real inbox
 
@@ -128,7 +134,7 @@ in the inbox instead of spam.
 ## Error contract
 
 - `RATE_LIMITED` -> back off and retry.
-- `FORBIDDEN` -> the API key is missing a scope (for example `emails:send` or
+- `FORBIDDEN` -> the API key is missing a scope (for example
   `webhooks:write`). Tell the user which scope to enable.
 - `TIMEOUT` -> the email never arrived; a routing/config bug, not transient.
 - `VALIDATION_ERROR` -> fix the payload using the returned details.

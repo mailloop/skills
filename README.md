@@ -112,7 +112,6 @@ local-dev/                           # gitignored — local testing only
 ## Scopes
 
 The MCP tools enforce these API-key scopes: `sandboxes:read`, `sandboxes:write`,
-`emails:read`, `emails:send`, `webhooks:read`, `webhooks:write`. A key with `*`
-has full access. Grant `emails:send` if you want the agent to use `send_email`.
+`emails:read`, `webhooks:read`, `webhooks:write`. A key with `*` has full access.
 
 Full docs: https://mailloop.io/mcp
