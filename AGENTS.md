@@ -70,7 +70,7 @@ don't guess or hardcode them here.
 - `timeout_ms` is capped at 60000. Filters are case-insensitive substring
   matches, and ALL provided filters must match.
 - It also returns an email that landed shortly BEFORE the call, not only one
-  arriving during it. The default lookback is 30 seconds, which covers the gap
+  arriving during it. The default lookback is 60 seconds, which covers the gap
   between the tool call that triggered the send and this one. Widen it with
   `since_ms` (up to 15 minutes) when the mail may have landed earlier, or pass 0
   to match only mail arriving during the call. Keep it tight in a sandbox you
