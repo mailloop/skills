@@ -19,6 +19,7 @@ email got sent" into a deterministic test assertion.
 - Emails: `wait_for_email` (the workhorse), `list_emails`, `get_email`.
 - Resend to a real inbox: `list_destinations`, `add_destination`,
   `remove_destination`, `resend_email`, `get_resend_quota`.
+- See how an email renders (beta): `list_email_clients`, `screenshot_email`.
 - Webhooks: `create_webhook`, `list_webhooks`, `get_webhook`, `update_webhook`,
   `delete_webhook`, `test_webhook`, `list_webhook_deliveries`.
 
@@ -108,6 +109,27 @@ in the inbox instead of spam.
   is `verified`, plus the `email_id`. Needs the `emails:resend` scope.
 - Resends are quota-limited per month (`get_resend_quota` / the `quota` field on
   `list_destinations`). `RESEND_QUOTA_EXCEEDED` means the limit is reached.
+
+## Seeing how an email renders (beta)
+
+When YOU need to see what a captured email looks like in a given client (not
+forward it to a human), `screenshot_email` renders it and hands back the image
+plus `findings`: the declarations the client dropped, the tags it rewrote, the
+body it clipped. Call `list_email_clients` first and pick ids from it; a client
+that is not on the list cannot be rendered by naming it.
+
+- `screenshot_email` takes the `email_id`, a `clients` array of profile ids and
+  one `theme` (`light` or `dark`). Set `include_image: false` when the findings
+  answer the question; they usually do, and they cost no vision tokens.
+- This is a beta; a render can occasionally be off. Every render is produced in
+  one browser engine rather than the client's own. Read `fidelityTier` and
+  `engineMismatch` on each result: B- means trust "this declaration is dropped"
+  and distrust anything about line breaks. Never call a render pixel accurate or
+  say it is what a subscriber sees.
+- Each image carries a `url` a person can open without an API key for 7 days.
+  Hand that over rather than describing the picture.
+- Needs the `emails:screenshot` scope. Each client and theme rendered counts as
+  one preview against the plan's monthly quota.
 
 ## Error contract
 
