@@ -141,8 +141,14 @@ body it clipped. Call `list_email_clients` first and pick ids from it; a client
 that is not on the list cannot be rendered by naming it.
 
 - `screenshot_email` takes the `email_id`, a `clients` array of profile ids and
-  one `theme` (`light` or `dark`). Set `include_image: false` when the findings
-  answer the question; they usually do, and they cost no vision tokens.
+  one `theme` (`light` or `dark`). Every call renders: you get the image and the
+  findings together. Read the findings first; they usually answer the question
+  more precisely than the picture.
+- A render is stored for 7 days and shared with the dashboard and the API. The
+  person sees it under the email's "Client screenshots" tab, and asking again
+  for the same email, client and theme returns the stored render (`cached:
+  true`) without spending a preview. A re-sent email is a new email, so fixing a
+  template and sending again always gets a fresh render.
 - This is a beta; a render can occasionally be off. Every render is produced in
   one browser engine rather than the client's own. Read `fidelityTier` and
   `engineMismatch` on each result: B- means trust "this declaration is dropped"
@@ -151,7 +157,10 @@ that is not on the list cannot be rendered by naming it.
 - Each image carries a `url` a person can open without an API key for 7 days.
   Hand that over rather than describing the picture.
 - Needs the `emails:screenshot` scope. Each client and theme rendered counts as
-  one preview against the plan's monthly quota.
+  one preview against the plan's monthly quota, the same quota the dashboard and
+  the API use; `list_email_clients` reports what is left and which clients the
+  plan includes. An organization renders one or a few emails at a time, so
+  render a batch one call after another rather than all at once.
 
 ## Error contract
 
